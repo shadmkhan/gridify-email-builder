@@ -37,14 +37,8 @@ class Grid {
     this.rows = options.rows || 15;
     this.items = [];
     this.selectedId = null;
-    
-    // Set up state for dragging and resizing
-    this.isDragging = false;
-    this.isResizing = false;
-    this.resizeDirection = null;
-    this.dragOffset = { x: 0, y: 0 };
-    this.initialPosition = { x: 0, y: 0 };
-    this.initialSize = { w: 0, h: 0 };
+    this.moveMode = false;
+    this.editingId = null;
     
     this.init();
   }
@@ -91,9 +85,17 @@ class Grid {
       }
     });
     
-    // Document event listeners for drag and resize operations
-    document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-    document.addEventListener('mouseup', () => this.handleMouseUp());
+    // Document event listeners for move mode operations
+    document.addEventListener('mousemove', (e) => {
+      if (this.moveMode && this.selectedId) {
+        this.handleMoveMode(e);
+      }
+    });
+    
+    document.addEventListener('mouseup', () => {
+      this.moveMode = false;
+      document.body.classList.remove('move-mode');
+    });
   }
   
   handleDragOver(e) {
@@ -158,12 +160,41 @@ class Grid {
       const componentContent = ComponentFactory.createComponent(item.type);
       itemElement.appendChild(componentContent);
       
-      // Add event listeners
-      itemElement.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('resize-handle')) return;
-        this.startDragging(e, item.id);
-      });
+      // Set up action buttons
+      const editButton = componentContent.querySelector('.edit-button');
+      const moveButton = componentContent.querySelector('.move-button');
+      const deleteButton = componentContent.querySelector('.delete-button');
       
+      // Edit button functionality
+      if (editButton) {
+        editButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const richTextEditor = itemElement.querySelector('.rich-text-editor');
+          if (richTextEditor) {
+            richTextEditor.focus();
+          }
+        });
+      }
+      
+      // Move button functionality
+      if (moveButton) {
+        moveButton.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          this.moveMode = true;
+          document.body.classList.add('move-mode');
+          this.selectItem(item.id);
+        });
+      }
+      
+      // Delete button functionality
+      if (deleteButton) {
+        deleteButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.removeItem(item.id);
+        });
+      }
+      
+      // Add click handler
       itemElement.addEventListener('click', (e) => {
         e.stopPropagation();
         this.selectItem(item.id);
@@ -184,10 +215,6 @@ class Grid {
       const prevSelected = document.getElementById(`grid-item-${this.selectedId}`);
       if (prevSelected) {
         prevSelected.classList.remove('selected');
-        
-        // Remove resize handles
-        const handles = prevSelected.querySelectorAll('.resize-handle');
-        handles.forEach(handle => handle.remove());
       }
     }
     
@@ -198,102 +225,41 @@ class Grid {
       const selected = document.getElementById(`grid-item-${id}`);
       if (selected) {
         selected.classList.add('selected');
-        
-        // Add resize handles
-        this.addResizeHandles(selected, id);
       }
     }
   }
   
-  addResizeHandles(element, itemId) {
-    const directions = ['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'];
-    
-    directions.forEach(dir => {
-      const handle = document.createElement('div');
-      handle.className = `resize-handle resize-handle-${dir}`;
-      handle.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        this.startResizing(e, itemId, dir);
-      });
+  removeItem(id) {
+    const index = this.items.findIndex(item => item.id === id);
+    if (index !== -1) {
+      this.items.splice(index, 1);
       
-      element.appendChild(handle);
-    });
-  }
-  
-  startDragging(e, itemId) {
-    e.preventDefault();
-    
-    this.isDragging = true;
-    this.selectItem(itemId);
-    
-    const item = this.items.find(item => item.id === itemId);
-    if (!item) return;
-    
-    const itemElement = document.getElementById(`grid-item-${itemId}`);
-    if (!itemElement) return;
-    
-    itemElement.classList.add('dragging');
-    
-    const rect = itemElement.getBoundingClientRect();
-    this.dragOffset = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-    
-    this.initialPosition = { 
-      x: item.position.x, 
-      y: item.position.y 
-    };
-  }
-  
-  startResizing(e, itemId, direction) {
-    e.preventDefault();
-    
-    this.isResizing = true;
-    this.resizeDirection = direction;
-    this.selectItem(itemId);
-    
-    const item = this.items.find(item => item.id === itemId);
-    if (!item) return;
-    
-    const itemElement = document.getElementById(`grid-item-${itemId}`);
-    if (!itemElement) return;
-    
-    itemElement.classList.add('resizing');
-    
-    this.initialSize = { 
-      w: item.position.w, 
-      h: item.position.h 
-    };
-    
-    this.initialPosition = { 
-      x: item.position.x, 
-      y: item.position.y 
-    };
-  }
-  
-  handleMouseMove(e) {
-    if (this.isDragging && this.selectedId) {
-      this.handleDragging(e);
-    }
-    
-    if (this.isResizing && this.selectedId && this.resizeDirection) {
-      this.handleResizing(e);
+      const element = document.getElementById(`grid-item-${id}`);
+      if (element) {
+        element.remove();
+      }
+      
+      if (this.selectedId === id) {
+        this.selectedId = null;
+      }
     }
   }
   
-  handleDragging(e) {
+  handleMoveMode(e) {
     const item = this.items.find(item => item.id === this.selectedId);
     if (!item) return;
     
     const gridRect = this.container.getBoundingClientRect();
     
-    let newX = Math.round((e.clientX - gridRect.left - this.dragOffset.x) / this.cellSize);
-    let newY = Math.round((e.clientY - gridRect.top - this.dragOffset.y) / this.cellSize);
+    const position = calculateGridPosition(
+      e.clientX,
+      e.clientY,
+      this.cellSize,
+      { x: gridRect.left, y: gridRect.top }
+    );
     
-    // Ensure we don't go outside the grid
-    newX = Math.max(0, Math.min(newX, this.cols - item.position.w));
-    newY = Math.max(0, Math.min(newY, this.rows - item.position.h));
+    let newX = Math.max(0, Math.min(position.col, this.cols - item.position.w));
+    let newY = Math.max(0, Math.min(position.row, this.rows - item.position.h));
     
     const newPosition = {
       ...item.position,
@@ -307,69 +273,5 @@ class Grid {
       item.position.y = newY;
       this.renderItem(item);
     }
-  }
-  
-  handleResizing(e) {
-    const item = this.items.find(item => item.id === this.selectedId);
-    if (!item) return;
-    
-    const gridRect = this.container.getBoundingClientRect();
-    
-    let newW = this.initialSize.w;
-    let newH = this.initialSize.h;
-    let newX = this.initialPosition.x;
-    let newY = this.initialPosition.y;
-    
-    if (this.resizeDirection.includes('e')) {
-      newW = Math.max(1, Math.round((e.clientX - gridRect.left - (this.initialPosition.x * this.cellSize)) / this.cellSize));
-    }
-    
-    if (this.resizeDirection.includes('s')) {
-      newH = Math.max(1, Math.round((e.clientY - gridRect.top - (this.initialPosition.y * this.cellSize)) / this.cellSize));
-    }
-    
-    if (this.resizeDirection.includes('w')) {
-      const rightEdge = (this.initialPosition.x + this.initialSize.w) * this.cellSize;
-      const newLeftEdge = Math.min(e.clientX - gridRect.left, rightEdge - this.cellSize);
-      newX = Math.floor(newLeftEdge / this.cellSize);
-      newW = Math.max(1, this.initialSize.w + (this.initialPosition.x - newX));
-    }
-    
-    if (this.resizeDirection.includes('n')) {
-      const bottomEdge = (this.initialPosition.y + this.initialSize.h) * this.cellSize;
-      const newTopEdge = Math.min(e.clientY - gridRect.top, bottomEdge - this.cellSize);
-      newY = Math.floor(newTopEdge / this.cellSize);
-      newH = Math.max(1, this.initialSize.h + (this.initialPosition.y - newY));
-    }
-    
-    // Ensure we don't go outside the grid
-    newW = Math.min(newW, this.cols - newX);
-    newH = Math.min(newH, this.rows - newY);
-    
-    const newPosition = {
-      x: newX,
-      y: newY,
-      w: newW,
-      h: newH
-    };
-    
-    // Check if new position overlaps with other items
-    if (!isPositionOccupied(this.items, newPosition, item.id)) {
-      item.position = newPosition;
-      this.renderItem(item);
-    }
-  }
-  
-  handleMouseUp() {
-    if (this.isDragging || this.isResizing) {
-      const itemElement = document.getElementById(`grid-item-${this.selectedId}`);
-      if (itemElement) {
-        itemElement.classList.remove('dragging', 'resizing');
-      }
-    }
-    
-    this.isDragging = false;
-    this.isResizing = false;
-    this.resizeDirection = null;
   }
 }

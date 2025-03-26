@@ -53,23 +53,13 @@ body {
 
 .grid-item {
   position: absolute;
-  cursor: grab;
+  cursor: pointer;
   z-index: 1;
   transition: transform 0.1s ease;
 }
 
 .grid-item.selected {
   z-index: 2;
-}
-
-.grid-item.dragging {
-  opacity: 0.8;
-  z-index: 10;
-}
-
-.grid-item.resizing {
-  opacity: 0.8;
-  z-index: 10;
 }
 
 .component-content {
@@ -82,71 +72,69 @@ body {
   overflow: hidden;
   border: 1px solid var(--email-border-color);
   transition: border-color 0.2s;
+  position: relative;
 }
 
 .selected .component-content {
   border-color: var(--email-accent);
 }
 
-.resize-handle {
+/* Rich Text Editor Styles */
+.rich-text-editor {
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  text-align: left;
+  outline: none;
+  overflow: auto;
+}
+
+.rich-text-editor.editing {
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 1px dashed var(--email-accent);
+}
+
+/* Item Actions Styles */
+.item-actions {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  top: -30px;
+  right: 0;
+  display: none;
   background-color: white;
-  border: 1px solid var(--email-accent);
-  z-index: 2;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  z-index: 10;
 }
 
-.resize-handle-n {
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: ns-resize;
+.selected .item-actions {
+  display: flex;
 }
 
-.resize-handle-e {
-  top: 50%;
-  right: -4px;
-  transform: translateY(-50%);
-  cursor: ew-resize;
+.action-button {
+  background: none;
+  border: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 2px;
 }
 
-.resize-handle-s {
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: ns-resize;
+.action-button:hover {
+  background-color: var(--email-hover);
 }
 
-.resize-handle-w {
-  top: 50%;
-  left: -4px;
-  transform: translateY(-50%);
-  cursor: ew-resize;
+.action-button span {
+  font-size: 16px;
 }
 
-.resize-handle-ne {
-  top: -4px;
-  right: -4px;
-  cursor: nesw-resize;
-}
-
-.resize-handle-se {
-  bottom: -4px;
-  right: -4px;
-  cursor: nwse-resize;
-}
-
-.resize-handle-sw {
-  bottom: -4px;
-  left: -4px;
-  cursor: nesw-resize;
-}
-
-.resize-handle-nw {
-  top: -4px;
-  left: -4px;
-  cursor: nwse-resize;
+/* Move mode cursor */
+body.move-mode {
+  cursor: move;
 }
 
 /* Component Panel Styles */

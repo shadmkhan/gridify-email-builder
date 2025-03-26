@@ -11,7 +11,8 @@ const componentTypes = [
     type: 'paragraph',
     label: 'Paragraph',
     icon: 'T',
-    defaultSize: { w: 3, h: 2 }
+    defaultSize: { w: 3, h: 2 },
+    isRichText: true
   },
   {
     type: 'image',
@@ -102,8 +103,15 @@ class ComponentFactory {
         
       case 'paragraph':
         const paragraph = document.createElement('div');
-        paragraph.className = 'paragraph-component';
+        paragraph.className = 'paragraph-component rich-text-editor';
+        paragraph.contentEditable = 'true';
         paragraph.textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.';
+        paragraph.addEventListener('focus', function() {
+          this.classList.add('editing');
+        });
+        paragraph.addEventListener('blur', function() {
+          this.classList.remove('editing');
+        });
         componentContent.appendChild(paragraph);
         break;
         
@@ -122,6 +130,16 @@ class ComponentFactory {
         componentContent.appendChild(dividerContainer);
         break;
     }
+
+    // Add context menu container
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'item-actions';
+    contextMenu.innerHTML = `
+      <button class="action-button edit-button" title="Edit"><span>✎</span></button>
+      <button class="action-button move-button" title="Move"><span>↔</span></button>
+      <button class="action-button delete-button" title="Delete"><span>×</span></button>
+    `;
+    componentContent.appendChild(contextMenu);
     
     return componentContent;
   }
