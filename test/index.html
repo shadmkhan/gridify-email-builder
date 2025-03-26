@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Builder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="main-content">
+      <div id="grid-container" class="grid-container"></div>
+    </div>
+    
+    <div id="component-panel" class="component-panel">
+      <div class="panel-header">
+        <h2 id="panel-title" class="panel-title">Components</h2>
+        <button id="toggle-panel" class="toggle-panel">
+          <span class="chevron-right">›</span>
+          <span class="chevron-left hidden">‹</span>
+        </button>
+      </div>
+      
+      <div id="components-list" class="components-list">
+        <!-- Components will be added here dynamically -->
+      </div>
+      
+      <div class="panel-footer">
+        <p>Drag components to the grid</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="components.js"></script>
+  <script src="grid.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
