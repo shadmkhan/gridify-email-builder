@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 210 100% 52%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +90,92 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .grid-item {
+    position: absolute;
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), 
+                width 0.2s cubic-bezier(0.22, 1, 0.36, 1), 
+                height 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .grid-item-selected {
+    z-index: 10;
+    box-shadow: 0 0 0 2px theme('colors.email.accent');
+  }
+
+  .grid-item-dragging {
+    z-index: 20;
+    opacity: 0.8;
+    cursor: grabbing;
+  }
+  
+  .grid-item-resizing {
+    z-index: 20;
+    opacity: 0.8;
+  }
+  
+  .resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: theme('colors.email.accent');
+    border-radius: 50%;
+  }
+  
+  .resize-handle-n {
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+  }
+  
+  .resize-handle-e {
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+  }
+  
+  .resize-handle-s {
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+  }
+  
+  .resize-handle-w {
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+  }
+  
+  .resize-handle-ne {
+    top: -4px;
+    right: -4px;
+    cursor: nesw-resize;
+  }
+  
+  .resize-handle-se {
+    bottom: -4px;
+    right: -4px;
+    cursor: nwse-resize;
+  }
+  
+  .resize-handle-sw {
+    bottom: -4px;
+    left: -4px;
+    cursor: nesw-resize;
+  }
+  
+  .resize-handle-nw {
+    top: -4px;
+    left: -4px;
+    cursor: nwse-resize;
   }
 }
